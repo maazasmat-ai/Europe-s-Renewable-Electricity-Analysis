@@ -1,6 +1,6 @@
 """Europe's renewable electricity transition, 2000 to latest year (Our World in Data).
 
-Run:  python src/analysis.py
+Run:  python analysis.py
 Steps: load + clean -> SQLite + SQL KPIs -> figures -> 2030 trend check for Germany -> Power BI export -> RESULTS.md
 """
 import re
@@ -13,9 +13,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parents[1]
-DATA = ROOT / "data" / "owid_energy_europe_2000_2025.csv"
-OUT, FIG, PBI = ROOT / "outputs", ROOT / "outputs" / "figures", ROOT / "powerbi"
+ROOT = Path(__file__).resolve().parent          # all files sit in the repository root
+DATA = ROOT / "owid_energy_europe_2000_2025.csv"
+OUT = FIG = PBI = ROOT
 DB = OUT / "energy.db"
 GERMANY_TARGET_2030 = 80  # % renewable share of gross electricity consumption (EEG 2023 target)
 
@@ -40,7 +40,7 @@ def run_sql(df: pd.DataFrame) -> dict:
     OUT.mkdir(exist_ok=True)
     with sqlite3.connect(DB) as con:
         df.to_sql("energy", con, if_exists="replace", index=False)
-        text = (ROOT / "sql" / "queries.sql").read_text(encoding="utf-8")
+        text = (ROOT / "queries.sql").read_text(encoding="utf-8")
         parts = re.split(r"^--\s*name:\s*(\w+)\s*$", text, flags=re.MULTILINE)
         return {n: pd.read_sql_query(q, con) for n, q in zip(parts[1::2], parts[2::2])}
 
